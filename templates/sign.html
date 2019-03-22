@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+            <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    <script type="text/javascript">
+       window.onload = function() {
+    new lineCanvas({
+        el: document.getElementById("canvas"),//绘制canvas的父级div
+        clearEl: document.getElementById("clearCanvas"),//清除按钮
+        saveEl: document.getElementById("saveCanvas"),//保存按钮
+        linewidth:4,//线条粗细，选填
+            color:"black",//线条颜色，选填
+           {#background:"#000000"//线条背景，选填#}
+    });
+    document.body.addEventListener('touchmove', function (event) {
+    event.preventDefault();
+}, false);
+};
+function lineCanvas(obj) {
+    this.linewidth = 1;
+    this.color = "#000";
+    this.background = "#ffffff";
+    for (var i in obj) {
+        this[i] = obj[i];
+    };
+    this.canvas = document.createElement("canvas");
+    this.el.appendChild(this.canvas);
+    this.cxt = this.canvas.getContext("2d");
+    this.canvas.width = this.el.clientWidth;
+    this.canvas.height = this.el.clientHeight;
+    this.cxt.fillStyle = this.background;
+    this.cxt.fillRect(0, 0, this.canvas.width, this.canvas.width);
+    this.cxt.strokeStyle = this.color;
+    this.cxt.lineWidth = this.linewidth;
+    this.cxt.lineCap = "round";
+    //开始绘制
+    this.canvas.addEventListener("touchstart", function(e) {
+        this.cxt.beginPath();
+        this.cxt.moveTo(e.changedTouches[0].pageX, e.changedTouches[0].pageY);
+    }.bind(this), false);
+    //绘制中
+    this.canvas.addEventListener("touchmove", function(e) {
+        this.cxt.lineTo(e.changedTouches[0].pageX, e.changedTouches[0].pageY);
+        this.cxt.stroke();
+    }.bind(this), false);
+    //结束绘制
+    this.canvas.addEventListener("touchend", function() {
+        this.cxt.closePath();
+    }.bind(this), false);
+    //清除画布
+    this.clearEl.addEventListener("click", function() {
+        this.cxt.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }.bind(this), false);
+    //保存图片，直接转base64
+    var self = this;
+    this.saveEl.addEventListener("click", function() {
+                self.background = "transparent";
+                this.cxt.fillStyle = self.background;
+        var image = new Image();
+        console.log('aaa',self.background);
+	image.src = this.canvas.toDataURL("image/png");
+    console.log(image.src);
+       $.ajax({
+            data:image.src,
+            url:'/saveImg',
+            type:'POST',
+            dataType:'json',
+            success:function (res) {
+                console.log(res)
+                if(res.data == "ok"){
+                    alert("签名成功,谢谢配合")
+                }
+            }
+        })
+    }.bind(this), false);
+};
+    </script>
+    <style type="text/css">
+        html,body{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+#canvas{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+#canvas canvas{
+    display: block;
+        overflow: hidden;
+
+}
+#clearCanvas{
+    width: 50%;
+    height: 100px;
+    padding-left: 2%;
+    line-height: 40px;
+    text-align: center;
+    position: absolute;
+        background-color: #fff;
+
+
+    bottom: 0;
+    left: 0;
+    border: 1px solid #DEDEDE;
+    z-index: 1;
+}
+#saveCanvas{
+    width: 50%;
+    height: 100px;
+    line-height: 40px;
+    text-align: center;
+    background-color: #46be9d;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    border: 1px solid #DEDEDE;
+    z-index: 1;
+}
+
+    </style>
+</head>
+<body>
+  <div id="canvas">
+    <p id="clearCanvas"><span style="font-size: 50px;display: block;margin-top: 30px">清除</span></p>
+    <p id="saveCanvas"><span style="font-size: 50px;display: block;margin-top: 30px">签名</span></p>
+</div>
+</body>
+</html>
